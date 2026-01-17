@@ -1,0 +1,5 @@
+prompt: "pair_score_nocot"
+pointwise: false  # or true for pointwise evaluation
+api_args:
+  model_name: "gpt-4o"
+  max_workers: 5

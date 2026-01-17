@@ -1,0 +1,15 @@
+prompt: pair_score_nocot
+vllm_args:
+  model_args:
+    model: ../models/gemma-3-27b-it
+    dtype: bfloat16
+    tensor_parallel_size: 1
+    max_model_len: 8192
+    trust_remote_code: true
+  sampling_params:
+    temperature: 0
+    max_tokens: 20
+hf_args:
+  model_args:
+    model: google/gemma-3-27b-it
+    dtype: float16

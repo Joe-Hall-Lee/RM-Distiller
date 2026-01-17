@@ -1,0 +1,15 @@
+prompt: pair_score_nocot
+pointwise: false
+vllm_args:
+  model_args:
+    model: ../models/Qwen2.5-3B-Instruct
+    dtype: float16
+    tensor_parallel_size: 1
+    trust_remote_code: true
+  sampling_params:
+    temperature: 0
+    max_tokens: 1024
+hf_args:
+  model_args:
+    model: Qwen/Qwen2.5-3B-Instruct
+    dtype: float16

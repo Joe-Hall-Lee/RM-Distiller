@@ -1,0 +1,130 @@
+################################################################################
+# Global variables
+################################################################################
+
+variables:
+  run_name: Qwen2.5-7B-Instruct-CLoud-HHRLHF
+  dataset_path: data/hhrlhf-skywork_critique_qwen.json
+  micro_batch_size: 2
+  global_seed: 17
+  max_seq_len: 1024
+
+run_name: ${variables.run_name}
+
+################################################################################
+# Model
+################################################################################
+model:
+  feedback_method: teacher
+  base_model_name_or_path: models/Qwen2.5-7B-Instruct
+  finetuned_model_name_or_path: output/Qwen2.5-7B-Instruct-Critic-HHRLHF
+
+
+################################################################################
+# Training hparams
+################################################################################
+
+seed: ${variables.global_seed}
+max_duration: 1ep
+
+lm_weight: 1.25
+
+global_train_batch_size: 96
+device_train_microbatch_size: ${variables.micro_batch_size}
+device_eval_batch_size: ${variables.micro_batch_size}
+
+precision: amp_bf16
+optimizer:
+  betas:
+  - 0.9
+  - 0.95
+  eps: 1.0e-10
+  lr: 1e-6
+  name: decoupled_adamw
+  weight_decay: 1e-6
+
+scheduler:
+  alpha_f: 0.01
+  name: cosine_with_warmup
+  t_warmup: 0.1dur
+
+
+################################################################################
+# Data
+################################################################################
+
+train_loader:
+  dataset:
+    max_seq_len: ${variables.max_seq_len}
+    shuffle: true
+    remote: ${variables.dataset_path}
+    split: train
+  drop_last: true
+  name: text
+  num_workers: 8
+
+eval_subset_num_batches: -1
+eval_loader:
+- dataset:
+    max_seq_len: ${variables.max_seq_len}
+    shuffle: false
+    remote: ${variables.dataset_path}
+    split: test
+  drop_last: true
+  label: ultra
+  name: text
+  num_workers: 8
+
+
+################################################################################
+# Parallelism
+################################################################################
+
+fsdp_config:
+  verbose: false
+  mixed_precision: PURE
+  limit_all_gathers: true
+  sharding_strategy: FULL_SHARD
+  activation_checkpointing: true
+  sync_module_states: true
+
+################################################################################
+# Logging, callbacks, etc
+################################################################################
+
+# Uncomment to log to wandb
+# loggers:
+  # wandb:
+  #   project: 
+
+algorithms:
+  gradient_clipping:
+    clipping_threshold: 1
+    clipping_type: norm
+
+callbacks:
+  lr_monitor: {}
+  memory_monitor: {}
+  speed_monitor:
+    window_size: 10
+  runtime_estimator: {}
+
+################################################################################
+# Misc
+################################################################################
+
+autoresume: true
+dist_timeout: 14400 
+console_log_interval: 50ba
+progress_bar: true
+python_log_level: debug
+log_to_console: true
+
+eval_first: false
+
+################################################################################
+# Model saving / loading
+################################################################################
+save_folder: output/${variables.run_name}
+save_interval: 0
+save_num_checkpoints_to_keep: 0
